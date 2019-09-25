@@ -50,7 +50,8 @@ public class NSGAIIIntegerRunner extends AbstractAlgorithmRunner {
       problemName = args[0] ;
       referenceParetoFront = args[1] ;
     } else {
-      problemName = "org.uma.jmetal.problem.multiobjective.NMMin" ;
+      //problemName = "org.uma.jmetal.problem.multiobjective.NMMin" ;
+      problemName = "org.uma.jmetal.problem.multiobjective.ecole.Ecole" ;
       referenceParetoFront = "";
     }
 
@@ -66,10 +67,10 @@ public class NSGAIIIntegerRunner extends AbstractAlgorithmRunner {
 
     selection = new BinaryTournamentSelection<IntegerSolution>() ;
 
-    int populationSize = 100 ;
+    int populationSize = 150 ;
     algorithm = new NSGAIIBuilder<IntegerSolution>(problem, crossover, mutation, populationSize)
             .setSelectionOperator(selection)
-            .setMaxEvaluations(25000)
+            .setMaxEvaluations(500000)
             .build() ;
 
     AlgorithmRunner algorithmRunner = new AlgorithmRunner.Executor(algorithm)
