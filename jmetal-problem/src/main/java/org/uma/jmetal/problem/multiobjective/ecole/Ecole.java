@@ -4,6 +4,8 @@ import org.uma.jmetal.problem.impl.AbstractIntegerProblem;
 import org.uma.jmetal.solution.IntegerSolution;
 import org.uma.jmetal.util.JMetalException;
 
+import org.uma.jmetal.util.ZMQClient;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -14,6 +16,8 @@ import java.util.List;
 import java.util.Map;
 
 public class Ecole extends AbstractIntegerProblem {
+	
+	ZMQClient zClient;
 
     public Ecole() {
         // 10 knobs, 3 objectives
@@ -58,7 +62,9 @@ public class Ecole extends AbstractIntegerProblem {
         String cachePath = "/mnt/disk8/fei/sigmod2019/data/catch-2d/";
         latencyMap = (HashMap<String, Double>) deser(cachePath + "latency_" + jobId + ".dat");
         throughputMap = (HashMap<String, Double>) deser(cachePath + "throughput_" + jobId + ".dat");
-
+        
+        //TODO parameterize the arguments later
+        zClient = new ZMQClient("EAClient", "localhost", 5555);
     }
 
     public Ecole(int numberOfVariables, int numberOfObjectives) throws JMetalException {
@@ -101,6 +107,7 @@ public class Ecole extends AbstractIntegerProblem {
         int[] memoryFractionValues = {40, 60, 80};
         int[] executorMemoryValues = {512, 1024, 6144};
 
+/*      
         // construct a concrete configuration to retrive the prediction (latency or throughput)
         String key = jobId+"_" + batchIntervals[solution.getVariableValue(0)] + "_" + solution.getVariableValue(1)*100 + "_" + solution.getVariableValue(2)*18 + "_" + solution.getVariableValue(3)*10000 + "_" + maxSizeInFlightValues[solution.getVariableValue(4)] + "_" + bypassMergeThresholdValues[solution.getVariableValue(5)] + "_" + memoryFractionValues[solution.getVariableValue(6)] + "_" + executorMemoryValues[solution.getVariableValue(7)] + "_" + solution.getVariableValue(8) + "_" + solution.getVariableValue(9);
         //System.out.println(key);
@@ -110,5 +117,27 @@ public class Ecole extends AbstractIntegerProblem {
         solution.setObjective(0, latency);
         solution.setObjective(1, -throughput);
         //solution.setObjective(2, cost);
+*/        
+        
+        StringBuilder config = new StringBuilder("JobID" + ":" + jobId + ";");
+        
+        String configLatency = (config.append(";Objective:Latency")).toString();
+        String configThruput = (config.append(";Objective:Throughput")).toString();
+        
+        zClient.putMessage("JConfig", configLatency);
+        String predictAnswer = zClient.getMessage();
+        String predictAnsTopic = zClient.parseTopic(predictAnswer); // it should be PyPred
+        String predictAnsMessage = zClient.parseMessage(predictAnswer);
+        double targetLatency = Double.parseDouble(predictAnsMessage);
+        solution.setObjective(0, targetLatency);
+        
+        zClient.putMessage("JConfig", configThruput);
+        predictAnswer = zClient.getMessage();
+        predictAnsTopic = zClient.parseTopic(predictAnswer); // it should be PyPred
+        predictAnsMessage = zClient.parseMessage(predictAnswer);
+        double targetThruput = Double.parseDouble(predictAnsMessage);
+        solution.setObjective(1, targetThruput);
+        
+            
     }
 }
