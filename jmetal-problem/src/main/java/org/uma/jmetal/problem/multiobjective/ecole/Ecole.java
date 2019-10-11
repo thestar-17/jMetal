@@ -59,9 +59,9 @@ public class Ecole extends AbstractIntegerProblem {
 
 
         // read the prediction from cache; later may need ask directly from model
-        String cachePath = "/mnt/disk8/fei/sigmod2019/data/catch-2d/";
-        latencyMap = (HashMap<String, Double>) deser(cachePath + "latency_" + jobId + ".dat");
-        throughputMap = (HashMap<String, Double>) deser(cachePath + "throughput_" + jobId + ".dat");
+        //String cachePath = "/mnt/disk8/fei/sigmod2019/data/catch-2d/";
+        //latencyMap = (HashMap<String, Double>) deser(cachePath + "latency_" + jobId + ".dat");
+        //throughputMap = (HashMap<String, Double>) deser(cachePath + "throughput_" + jobId + ".dat");
         
         //TODO parameterize the arguments later
         zClient = new ZMQClient("EAClient", "localhost", 5555);
@@ -74,8 +74,8 @@ public class Ecole extends AbstractIntegerProblem {
     }
 
     // a helper function from moo project, for reading the cached result
-    private Map<String, Double> latencyMap;
-    private Map<String, Double> throughputMap;
+    //private Map<String, Double> latencyMap;
+    //private Map<String, Double> throughputMap;
     public static Object deser(String path) {
         Object obj = null;
         File file = new File(path);
@@ -121,8 +121,8 @@ public class Ecole extends AbstractIntegerProblem {
         
         StringBuilder config = new StringBuilder("JobID" + ":" + jobId + ";");
         
-        String configLatency = (config.append(";Objective:Latency")).toString();
-        String configThruput = (config.append(";Objective:Throughput")).toString();
+        String configLatency = (config.append("Objective:Latency")).toString();
+        String configThruput = (config.append("Objective:Throughput")).toString();
         
         zClient.putMessage("JConfig", configLatency);
         String predictAnswer = zClient.getMessage();
