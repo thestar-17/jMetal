@@ -16,7 +16,11 @@ import java.util.Map;
 public class Ecole extends AbstractIntegerProblem {
 
     public Ecole() {
-        this(10, 3);
+        // 10 knobs, 3 objectives
+        //this(10, 3);
+        this(10, 2);
+
+        // for all knobs, we need to specify the lower and upper bound. It has to be continous integer range
         List<Integer> lowerLimit = new ArrayList<>(getNumberOfVariables()) ;
         List<Integer> upperLimit = new ArrayList<>(getNumberOfVariables()) ;
 
@@ -46,13 +50,13 @@ public class Ecole extends AbstractIntegerProblem {
         setLowerLimit(lowerLimit);
         setUpperLimit(upperLimit);
 
+        // name the jobId
         int jobId = 14;
-        String cachePath = "/Users/feisong/test_space/pareto/data/catch-2d/";
-        latencyMap = (HashMap<String, Double>) deser(cachePath + "latency_" + jobId + ".dat");
-        //String key = jobId+"_" + 1 + "_" + 1*100 + "_" + 1*18 + "_" + 10*10000 + "_" + 24 + "_" + 18 + "_" + 60 + "_" + 1024 + "_" + 0 + "_" + 1;
-        //System.out.println(key);
-        //System.out.println(latencyMap.get(key));
 
+
+        // read the prediction from cache; later may need ask directly from model
+        String cachePath = "/mnt/disk8/fei/sigmod2019/data/catch-2d/";
+        latencyMap = (HashMap<String, Double>) deser(cachePath + "latency_" + jobId + ".dat");
         throughputMap = (HashMap<String, Double>) deser(cachePath + "throughput_" + jobId + ".dat");
 
     }
@@ -64,8 +68,6 @@ public class Ecole extends AbstractIntegerProblem {
     }
 
     // a helper function from moo project, for reading the cached result
-    //public static int[] lowerBounds = {10, 1, 1, 1};
-    //public static int[] UpperBounds = {120, 10, 10, 5};
     private Map<String, Double> latencyMap;
     private Map<String, Double> throughputMap;
     public static Object deser(String path) {
@@ -92,32 +94,21 @@ public class Ecole extends AbstractIntegerProblem {
         double latency;
         double throughput;
 
+        // since we only take continous chunk, we construct a mapping from a enumerated set to a continous chunk
         int[] batchIntervals = {1, 2, 5, 10};
         int[] maxSizeInFlightValues = {24, 48, 96};
         int[] bypassMergeThresholdValues = {10, 18, 200};
         int[] memoryFractionValues = {40, 60, 80};
         int[] executorMemoryValues = {512, 1024, 6144};
 
-/*        int batchInterval = solution.getVariableValue(0);
-        if (batchInterval == 3)
-            batchInterval = 5;
-        if (batchInterval == 4)
-            batchInterval = 10;*/
-
+        // construct a concrete configuration to retrive the prediction (latency or throughput)
         String key = jobId+"_" + batchIntervals[solution.getVariableValue(0)] + "_" + solution.getVariableValue(1)*100 + "_" + solution.getVariableValue(2)*18 + "_" + solution.getVariableValue(3)*10000 + "_" + maxSizeInFlightValues[solution.getVariableValue(4)] + "_" + bypassMergeThresholdValues[solution.getVariableValue(5)] + "_" + memoryFractionValues[solution.getVariableValue(6)] + "_" + executorMemoryValues[solution.getVariableValue(7)] + "_" + solution.getVariableValue(8) + "_" + solution.getVariableValue(9);
-        /*
-        for (int i = 0; i < solution.getNumberOfVariables(); i++) {
-            int value = solution.getVariableValue(i) ;
-            key = key + value + "_" ;
-        }
-        */
-        //key = key + 24 + "_" + 18 + "_" + 60 + "_" + 1024 + "_" + 0 + "_" + 1;
-        System.out.println(key);
+        //System.out.println(key);
         latency = latencyMap.get(key);
         throughput = throughputMap.get(key);
-        double cost = 12.5 * batchIntervals[solution.getVariableValue(0)] + 48 * solution.getVariableValue(2)*18;
+        //double cost = 12.5 * batchIntervals[solution.getVariableValue(0)] + 48 * solution.getVariableValue(2)*18;
         solution.setObjective(0, latency);
         solution.setObjective(1, -throughput);
-        solution.setObjective(2, cost);
+        //solution.setObjective(2, cost);
     }
 }
