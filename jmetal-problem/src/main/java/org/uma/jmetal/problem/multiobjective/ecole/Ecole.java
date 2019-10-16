@@ -64,7 +64,7 @@ public class Ecole extends AbstractIntegerProblem {
         //throughputMap = (HashMap<String, Double>) deser(cachePath + "throughput_" + jobId + ".dat");
         
         //TODO parameterize the arguments later
-        zClient = new ZMQClient("EAClient", "localhost", 5555);
+        zClient = new ZMQClient("EAClient", "localhost", 5552);
     }
 
     public Ecole(int numberOfVariables, int numberOfObjectives) throws JMetalException {
@@ -119,10 +119,14 @@ public class Ecole extends AbstractIntegerProblem {
         //solution.setObjective(2, cost);
 */        
         
-        StringBuilder config = new StringBuilder("JobID" + ":" + jobId + ";");
+        StringBuilder configL = new StringBuilder("JobID" + ":" + jobId + ";" + "Objective:Latency;" + "batchInterval:" + batchIntervals[solution.getVariableValue(0)] + ";blockInterval:" + solution.getVariableValue(1)*100 + ";parallelism:" + solution.getVariableValue(2)*18 + ";inputRate:" + solution.getVariableValue(3)*10000 + ";maxSizeInFlightValues:" + maxSizeInFlightValues[solution.getVariableValue(4)] + ";bypassMergeThresholdValues:" + bypassMergeThresholdValues[solution.getVariableValue(5)] + ";memoryFractionValues:" + memoryFractionValues[solution.getVariableValue(6)] + ";executorMemoryValues:" + executorMemoryValues[solution.getVariableValue(7)] + ";rddCompressValues:" + solution.getVariableValue(8) + ";broadcastCompressValues:" + solution.getVariableValue(9));
+        StringBuilder configT = new StringBuilder("JobID" + ":" + jobId + ";" + "Objective:Throughput;" + "batchInterval:" + batchIntervals[solution.getVariableValue(0)] + ";blockInterval:" + solution.getVariableValue(1)*100 + ";parallelism:" + solution.getVariableValue(2)*18 + ";inputRate:" + solution.getVariableValue(3)*10000 + ";maxSizeInFlightValues:" + maxSizeInFlightValues[solution.getVariableValue(4)] + ";bypassMergeThresholdValues:" + bypassMergeThresholdValues[solution.getVariableValue(5)] + ";memoryFractionValues:" + memoryFractionValues[solution.getVariableValue(6)] + ";executorMemoryValues:" + executorMemoryValues[solution.getVariableValue(7)] + ";rddCompressValues:" + solution.getVariableValue(8) + ";broadcastCompressValues:" + solution.getVariableValue(9));
+
+
         
-        String configLatency = (config.append("Objective:Latency")).toString();
-        String configThruput = (config.append("Objective:Throughput")).toString();
+        String configLatency = configL.toString();
+        String configThruput = configT.toString();
+
         
         zClient.putMessage("JConfig", configLatency);
         String predictAnswer = zClient.getMessage();
@@ -136,7 +140,7 @@ public class Ecole extends AbstractIntegerProblem {
         predictAnsTopic = zClient.parseTopic(predictAnswer); // it should be PyPred
         predictAnsMessage = zClient.parseMessage(predictAnswer);
         double targetThruput = Double.parseDouble(predictAnsMessage);
-        solution.setObjective(1, targetThruput);
+        solution.setObjective(1, -targetThruput);
         
             
     }
