@@ -4,17 +4,14 @@ import org.uma.jmetal.problem.impl.AbstractIntegerProblem;
 import org.uma.jmetal.solution.IntegerSolution;
 import org.uma.jmetal.util.JMetalException;
 import org.uma.jmetal.util.ZMQClient;
+import org.uma.jmetal.util.SocClient;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Ercilla extends AbstractIntegerProblem {
 
-	ZMQClient zClient;
+    SocClient socClient;
 
     public Ercilla() {
         // 10 knobs, 3 objectives
@@ -61,7 +58,7 @@ public class Ercilla extends AbstractIntegerProblem {
         //int jobId = 14;
 
         //TODO parameterize the arguments later
-        zClient = new ZMQClient("EAClient", "localhost", 5555);
+        socClient = new SocClient("EAClient", "localhost", 5555);
     }
 
     public Ercilla(int numberOfVariables, int numberOfObjectives) throws JMetalException {
@@ -83,17 +80,17 @@ public class Ercilla extends AbstractIntegerProblem {
 
         System.out.println(configLatency);
         
-        zClient.putMessage("JConfig", configLatency);
-        String predictAnswer = zClient.getMessage();
-        String predictAnsTopic = zClient.parseTopic(predictAnswer); // it should be PyPred
-        String predictAnsMessage = zClient.parseMessage(predictAnswer);
+        socClient.putMessage("JConfig", configLatency);
+        String predictAnswer = socClient.getMessage();
+        String predictAnsTopic = socClient.parseTopic(predictAnswer); // it should be PyPred
+        String predictAnsMessage = socClient.parseMessage(predictAnswer);
         double targetLatency = Double.parseDouble(predictAnsMessage);
         solution.setObjective(0, targetLatency);
         
-/*        zClient.putMessage("JConfig", configCost);
-        predictAnswer = zClient.getMessage();
-        predictAnsTopic = zClient.parseTopic(predictAnswer); // it should be PyPred
-        predictAnsMessage = zClient.parseMessage(predictAnswer);
+/*        socClient.putMessage("JConfig", configCost);
+        predictAnswer = socClient.getMessage();
+        predictAnsTopic = socClient.parseTopic(predictAnswer); // it should be PyPred
+        predictAnsMessage = socClient.parseMessage(predictAnswer);
         double targetThruput = Double.parseDouble(predictAnsMessage);
         solution.setObjective(1, targetThruput);*/
 
