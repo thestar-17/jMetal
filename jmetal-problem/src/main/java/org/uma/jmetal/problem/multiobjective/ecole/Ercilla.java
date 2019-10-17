@@ -73,10 +73,10 @@ public class Ercilla extends AbstractIntegerProblem {
 
         
         StringBuilder config1 = new StringBuilder("JobID" + ":" + jobId + ";" + "Objective:latency;" + "k1:" + solution.getVariableValue(0) + ";k2:" + solution.getVariableValue(1) + ";k3:" + solution.getVariableValue(2) + ";k4:" + solution.getVariableValue(3) + ";k5:" + solution.getVariableValue(4) + ";k6:" + solution.getVariableValue(5) + ";k7:" + solution.getVariableValue(6) + ";k8:" + solution.getVariableValue(7) + ";s1:" + solution.getVariableValue(8) + ";s2:" + solution.getVariableValue(9) + ";s3:" + solution.getVariableValue(10) + ";s4:" + solution.getVariableValue(11));
-        //StringBuilder config2 = new StringBuilder("JobID" + ":" + jobId + ";" + "Objective:cpu;" + "k1:" + solution.getVariableValue(0) + ";k2:" + solution.getVariableValue(1) + ";k3:" + solution.getVariableValue(2) + ";k4:" + solution.getVariableValue(3) + ";k5:" + solution.getVariableValue(4) + ";k6:" + solution.getVariableValue(5) + ";k7:" + solution.getVariableValue(6) + ";k8:" + solution.getVariableValue(7) + ";s1:" + solution.getVariableValue(8) + ";s2:" + solution.getVariableValue(9) + ";s3:" + solution.getVariableValue(10) + ";s4:" + solution.getVariableValue(11));
+        StringBuilder config2 = new StringBuilder("JobID" + ":" + jobId + ";" + "Objective:cores;" + "k1:" + solution.getVariableValue(0) + ";k2:" + solution.getVariableValue(1) + ";k3:" + solution.getVariableValue(2) + ";k4:" + solution.getVariableValue(3) + ";k5:" + solution.getVariableValue(4) + ";k6:" + solution.getVariableValue(5) + ";k7:" + solution.getVariableValue(6) + ";k8:" + solution.getVariableValue(7) + ";s1:" + solution.getVariableValue(8) + ";s2:" + solution.getVariableValue(9) + ";s3:" + solution.getVariableValue(10) + ";s4:" + solution.getVariableValue(11));
 
         String configLatency = config1.toString();
-        //String configCost = config2.toString();
+        String configCores = config2.toString();
 
         System.out.println(configLatency);
         
@@ -87,14 +87,14 @@ public class Ercilla extends AbstractIntegerProblem {
         double targetLatency = Double.parseDouble(predictAnsMessage);
         solution.setObjective(0, targetLatency);
         
-/*        socClient.putMessage("JConfig", configCost);
+        socClient.putMessage("JConfig", configCores);
         predictAnswer = socClient.getMessage();
         predictAnsTopic = socClient.parseTopic(predictAnswer); // it should be PyPred
         predictAnsMessage = socClient.parseMessage(predictAnswer);
-        double targetThruput = Double.parseDouble(predictAnsMessage);
-        solution.setObjective(1, targetThruput);*/
+        double targetCores = Double.parseDouble(predictAnsMessage);
+        solution.setObjective(1, targetCores);
 
-        solution.setObjective(1, solution.getVariableValue(1) * solution.getVariableValue(2));
+        //solution.setObjective(1, solution.getVariableValue(1) * solution.getVariableValue(2));
 
     }
 }
