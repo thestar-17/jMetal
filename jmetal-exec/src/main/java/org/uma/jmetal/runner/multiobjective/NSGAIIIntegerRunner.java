@@ -70,10 +70,10 @@ public class NSGAIIIntegerRunner extends AbstractAlgorithmRunner {
     selection = new BinaryTournamentSelection<IntegerSolution>() ;
 
     // item2: number of pareto points
-    int populationSize = 30 ;
+    int populationSize = 150 ;
     algorithm = new NSGAIIBuilder<IntegerSolution>(problem, crossover, mutation, populationSize)
             .setSelectionOperator(selection)
-            .setMaxEvaluations(10)// item3: maximum iterations
+            .setMaxEvaluations(100)// item3: maximum iterations
             .build() ;
 
     AlgorithmRunner algorithmRunner = new AlgorithmRunner.Executor(algorithm)

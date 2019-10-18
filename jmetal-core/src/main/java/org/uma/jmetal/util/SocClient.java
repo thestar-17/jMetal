@@ -43,11 +43,11 @@ public class SocClient {
 
     public void putMessage(String topic, String message){
         try {
-            System.out.println("[Trying to connect to server]");
+            //System.out.println("[Trying to connect to server]");
             this.socket = new Socket(this.ipAddress, this.port);
             this.outsocket = new PrintStream(this.socket.getOutputStream());
             this.insocket = new Scanner(this.socket.getInputStream());
-            System.out.println( "Socket Client " + this.clientName + ":" + this.port + " connected");
+            //System.out.println( "Socket Client " + this.clientName + ":" + this.port + " connected");
 
         } catch (IOException e) {
             try {
@@ -55,7 +55,7 @@ public class SocClient {
                 this.socket = new Socket(this.ipAddress, this.port);
                 this.outsocket = new PrintStream(this.socket.getOutputStream());
                 this.insocket = new Scanner(this.socket.getInputStream());
-                System.out.println( "Socket Client " + this.clientName + ":" + this.port + " connected");
+                //System.out.println( "Socket Client " + this.clientName + ":" + this.port + " connected");
             } catch (IOException ee) {
 
             }

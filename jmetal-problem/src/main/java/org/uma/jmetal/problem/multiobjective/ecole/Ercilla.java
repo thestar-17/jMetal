@@ -69,7 +69,7 @@ public class Ercilla extends AbstractIntegerProblem {
 
 
     public void evaluate(IntegerSolution solution) {
-        String jobId = "9-3";
+        String jobId = "10-0";
 
         
         StringBuilder config1 = new StringBuilder("JobID" + ":" + jobId + ";" + "Objective:latency;" + "k1:" + solution.getVariableValue(0) + ";k2:" + solution.getVariableValue(1) + ";k3:" + solution.getVariableValue(2) + ";k4:" + solution.getVariableValue(3) + ";k5:" + solution.getVariableValue(4) + ";k6:" + solution.getVariableValue(5) + ";k7:" + solution.getVariableValue(6) + ";k8:" + solution.getVariableValue(7) + ";s1:" + solution.getVariableValue(8) + ";s2:" + solution.getVariableValue(9) + ";s3:" + solution.getVariableValue(10) + ";s4:" + solution.getVariableValue(11));
@@ -78,7 +78,7 @@ public class Ercilla extends AbstractIntegerProblem {
         String configLatency = config1.toString();
         String configCores = config2.toString();
 
-        System.out.println(configLatency);
+        //System.out.println(configLatency);
         
         socClient.putMessage("JConfig", configLatency);
         String predictAnswer = socClient.getMessage();
