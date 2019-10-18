@@ -3,17 +3,16 @@ package org.uma.jmetal.problem.multiobjective.ecole;
 import org.uma.jmetal.problem.impl.AbstractIntegerProblem;
 import org.uma.jmetal.solution.IntegerSolution;
 import org.uma.jmetal.util.JMetalException;
-import org.uma.jmetal.util.ZMQClient;
 import org.uma.jmetal.util.SocClient;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class Ercilla extends AbstractIntegerProblem {
+public class Erc10 extends AbstractIntegerProblem {
 
     SocClient socClient;
 
-    public Ercilla() {
+    public Erc10() {
         // 10 knobs, 3 objectives
         //this(10, 3);
         this(12, 2);
@@ -61,10 +60,10 @@ public class Ercilla extends AbstractIntegerProblem {
         socClient = new SocClient("EAClient", "localhost", 5565);
     }
 
-    public Ercilla(int numberOfVariables, int numberOfObjectives) throws JMetalException {
+    public Erc10(int numberOfVariables, int numberOfObjectives) throws JMetalException {
         setNumberOfVariables(numberOfVariables);
         setNumberOfObjectives(numberOfObjectives);
-        setName("Ercilla");
+        setName("Erc10");
     }
 
 

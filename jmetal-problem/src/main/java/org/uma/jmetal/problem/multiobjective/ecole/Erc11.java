@@ -3,17 +3,16 @@ package org.uma.jmetal.problem.multiobjective.ecole;
 import org.uma.jmetal.problem.impl.AbstractIntegerProblem;
 import org.uma.jmetal.solution.IntegerSolution;
 import org.uma.jmetal.util.JMetalException;
-import org.uma.jmetal.util.ZMQClient;
 import org.uma.jmetal.util.SocClient;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class Ercilla extends AbstractIntegerProblem {
+public class Erc11 extends AbstractIntegerProblem {
 
     SocClient socClient;
 
-    public Ercilla() {
+    public Erc11() {
         // 10 knobs, 3 objectives
         //this(10, 3);
         this(12, 2);
@@ -61,15 +60,15 @@ public class Ercilla extends AbstractIntegerProblem {
         socClient = new SocClient("EAClient", "localhost", 5565);
     }
 
-    public Ercilla(int numberOfVariables, int numberOfObjectives) throws JMetalException {
+    public Erc11(int numberOfVariables, int numberOfObjectives) throws JMetalException {
         setNumberOfVariables(numberOfVariables);
         setNumberOfObjectives(numberOfObjectives);
-        setName("Ercilla");
+        setName("Erc11");
     }
 
 
     public void evaluate(IntegerSolution solution) {
-        String jobId = "10-0";
+        String jobId = "11-2";
 
         
         StringBuilder config1 = new StringBuilder("JobID" + ":" + jobId + ";" + "Objective:latency;" + "k1:" + solution.getVariableValue(0) + ";k2:" + solution.getVariableValue(1) + ";k3:" + solution.getVariableValue(2) + ";k4:" + solution.getVariableValue(3) + ";k5:" + solution.getVariableValue(4) + ";k6:" + solution.getVariableValue(5) + ";k7:" + solution.getVariableValue(6) + ";k8:" + solution.getVariableValue(7) + ";s1:" + solution.getVariableValue(8) + ";s2:" + solution.getVariableValue(9) + ";s3:" + solution.getVariableValue(10) + ";s4:" + solution.getVariableValue(11));
