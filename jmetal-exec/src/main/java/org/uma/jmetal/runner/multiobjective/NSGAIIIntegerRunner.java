@@ -42,13 +42,15 @@ public class NSGAIIIntegerRunner extends AbstractAlgorithmRunner {
     SelectionOperator<List<IntegerSolution>, IntegerSolution> selection;
     
     String problemName ;
-
+    int populationSize = 0;
     String referenceParetoFront = "" ;
     if (args.length == 1) {
       problemName = args[0];
     } else if (args.length == 2) {
       problemName = args[0] ;
-      referenceParetoFront = args[1] ;
+      populationSize = 50 ;
+      referenceParetoFront = "";
+      //referenceParetoFront = args[1] ;
     } else {
       //problemName = "org.uma.jmetal.problem.multiobjective.NMMin" ;
       // item1: point to the problem
@@ -70,10 +72,12 @@ public class NSGAIIIntegerRunner extends AbstractAlgorithmRunner {
     selection = new BinaryTournamentSelection<IntegerSolution>() ;
 
     // item2: number of pareto points
-    int populationSize = 150 ;
+    //int populationSize = 50 ;
+    System.out.println("problem is: " + problemName);
+    System.out.println("population size is: " + populationSize);
     algorithm = new NSGAIIBuilder<IntegerSolution>(problem, crossover, mutation, populationSize)
             .setSelectionOperator(selection)
-            .setMaxEvaluations(100)// item3: maximum iterations
+            .setMaxEvaluations(1000)// item3: maximum iterations
             .build() ;
 
     AlgorithmRunner algorithmRunner = new AlgorithmRunner.Executor(algorithm)
