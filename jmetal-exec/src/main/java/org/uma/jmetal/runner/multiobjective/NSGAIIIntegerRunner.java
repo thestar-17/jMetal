@@ -48,7 +48,7 @@ public class NSGAIIIntegerRunner extends AbstractAlgorithmRunner {
       problemName = args[0];
     } else if (args.length == 2) {
       problemName = args[0] ;
-      populationSize = 50 ;
+      populationSize = Integer.parseInt(args[1]) ;
       referenceParetoFront = "";
       //referenceParetoFront = args[1] ;
     } else {

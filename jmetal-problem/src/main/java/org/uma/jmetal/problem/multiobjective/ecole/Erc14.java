@@ -70,9 +70,15 @@ public class Erc14 extends AbstractIntegerProblem {
     public void evaluate(IntegerSolution solution) {
         String jobId = "14-0";
 
-        
-        StringBuilder config1 = new StringBuilder("JobID" + ":" + jobId + ";" + "Objective:latency;" + "k1:" + solution.getVariableValue(0) + ";k2:" + solution.getVariableValue(1) + ";k3:" + solution.getVariableValue(2) + ";k4:" + solution.getVariableValue(3) + ";k5:" + solution.getVariableValue(4) + ";k6:" + solution.getVariableValue(5) + ";k7:" + solution.getVariableValue(6) + ";k8:" + solution.getVariableValue(7) + ";s1:" + solution.getVariableValue(8) + ";s2:" + solution.getVariableValue(9) + ";s3:" + solution.getVariableValue(10) + ";s4:" + solution.getVariableValue(11));
-        StringBuilder config2 = new StringBuilder("JobID" + ":" + jobId + ";" + "Objective:cores;" + "k1:" + solution.getVariableValue(0) + ";k2:" + solution.getVariableValue(1) + ";k3:" + solution.getVariableValue(2) + ";k4:" + solution.getVariableValue(3) + ";k5:" + solution.getVariableValue(4) + ";k6:" + solution.getVariableValue(5) + ";k7:" + solution.getVariableValue(6) + ";k8:" + solution.getVariableValue(7) + ";s1:" + solution.getVariableValue(8) + ";s2:" + solution.getVariableValue(9) + ";s3:" + solution.getVariableValue(10) + ";s4:" + solution.getVariableValue(11));
+        int numberOfVariables = getNumberOfVariables();
+        double[] x = new double[numberOfVariables] ;
+
+        for (int i = 0; i < numberOfVariables; i++) {
+            x[i] = solution.getVariableValue(i) ;
+        }
+
+        StringBuilder config1 = new StringBuilder("JobID" + ":" + jobId + ";" + "Objective:latency;" + "k1:" + x[0] + ";k2:" + x[1] + ";k3:" + x[2] + ";k4:" + x[3] + ";k5:" + x[4] + ";k6:" + x[5] + ";k7:" + x[6] + ";k8:" + x[7] + ";s1:" + x[8] + ";s2:" + x[9] + ";s3:" + x[10] + ";s4:" + x[11]);
+        StringBuilder config2 = new StringBuilder("JobID" + ":" + jobId + ";" + "Objective:cores;" + "k1:" + x[0] + ";k2:" + x[1] + ";k3:" + x[2] + ";k4:" + x[3] + ";k5:" + x[4] + ";k6:" + x[5] + ";k7:" + x[6] + ";k8:" + x[7] + ";s1:" + x[8] + ";s2:" + x[9] + ";s3:" + x[10] + ";s4:" + x[11]);
 
         String configLatency = config1.toString();
         String configCores = config2.toString();

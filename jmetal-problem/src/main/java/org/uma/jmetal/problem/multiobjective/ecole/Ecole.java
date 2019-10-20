@@ -30,15 +30,15 @@ public class Ecole extends AbstractIntegerProblem {
 
         // for job10, the only valid batchIntevals are 1, 2, 5, 10
 
-        lowerLimit.add(0);
         lowerLimit.add(1);
-        lowerLimit.add(1);
-        lowerLimit.add(10);
+        lowerLimit.add(100);
+        lowerLimit.add(18);
+        lowerLimit.add(100000);
 
-        upperLimit.add(3);
         upperLimit.add(10);
-        upperLimit.add(5);
-        upperLimit.add(120);
+        upperLimit.add(1000);
+        upperLimit.add(90);
+        upperLimit.add(1200000);
 
         for (int i = 4; i <= 7; i++) {
             lowerLimit.add(0);
@@ -54,17 +54,9 @@ public class Ecole extends AbstractIntegerProblem {
         setLowerLimit(lowerLimit);
         setUpperLimit(upperLimit);
 
-        // name the jobId
-        int jobId = 14;
-
-
-        // read the prediction from cache; later may need ask directly from model
-        //String cachePath = "/mnt/disk8/fei/sigmod2019/data/catch-2d/";
-        //latencyMap = (HashMap<String, Double>) deser(cachePath + "latency_" + jobId + ".dat");
-        //throughputMap = (HashMap<String, Double>) deser(cachePath + "throughput_" + jobId + ".dat");
         
         //TODO parameterize the arguments later
-        zClient = new ZMQClient("EAClient", "localhost", 5552);
+        zClient = new ZMQClient("EAClient", "localhost", 5550);
     }
 
     public Ecole(int numberOfVariables, int numberOfObjectives) throws JMetalException {
@@ -73,32 +65,71 @@ public class Ecole extends AbstractIntegerProblem {
         setName("Ecole");
     }
 
-    // a helper function from moo project, for reading the cached result
-    //private Map<String, Double> latencyMap;
-    //private Map<String, Double> throughputMap;
-    public static Object deser(String path) {
-        Object obj = null;
-        File file = new File(path);
-        FileInputStream in;
-        try {
-            in = new FileInputStream(file);
-            ObjectInputStream objIn = new ObjectInputStream(in);
-            obj = objIn.readObject();
-            objIn.close();
-            System.out.println("read object success!");
-        } catch (IOException e) {
-            System.out.println("read object failed");
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+
+    public static boolean constraintSlideWindowAndLatency(int jobId, double batchInterval, double latency) {
+        if (jobId >= 10 && jobId <= 15)
+            return latency < 10 * 1000;
+        if (jobId >= 16 && jobId <= 21)
+            return latency < 10 * 1000;
+        if (jobId >= 22 && jobId <= 23)
+            return latency < 10 * 1000;
+        if (jobId >= 24 && jobId <= 25)
+            return latency < 10 * 1000;
+        if (jobId >= 26 && jobId <= 31)
+            return latency < batchInterval * 1000;
+        if (jobId >= 32 && jobId <= 37)
+            return latency < 10 * 1000;
+        if (jobId >= 38 && jobId <= 43)
+            return latency < 10 * 1000;
+        if (jobId >= 44 && jobId <= 49)
+            return latency < 10 * 1000;
+        if (jobId >= 50 && jobId <= 55)
+            return latency < 10 * 1000;
+        if (jobId >= 56 && jobId <= 67)
+            return latency < batchInterval * 1000;
+        else {
+            System.out.println("尚未涵盖该job");
+            System.exit(-1);
+            return false;
         }
-        return obj;
+    }
+
+    public static double constraintBatchIntervalAndWindowSize(int jobId, double batchInterval) {
+        if (jobId >= 10 && jobId <= 15)
+            return 10.0 % batchInterval;
+        if (jobId >= 16 && jobId <= 21)
+            return 10.0 % batchInterval;
+        if (jobId >= 22 && jobId <= 23)
+            return 10.0 % batchInterval;
+        if (jobId >= 24 && jobId <= 25)
+            return 10.0 % batchInterval;
+        if (jobId >= 26 && jobId <= 31)
+            return 0;
+        if (jobId >= 32 && jobId <= 37)
+            return 10.0 % batchInterval;
+        if (jobId >= 38 && jobId <= 43)
+            return 10.0 % batchInterval;
+        if (jobId >= 44 && jobId <= 49)
+            return 10.0 % batchInterval;
+        if (jobId >= 50 && jobId <= 55)
+            return 10.0 % batchInterval;
+        if (jobId >= 56 && jobId <= 67)
+            return 0;
+        else {
+            System.out.println("尚未涵盖该job");
+            System.exit(-1);
+            return -1;
+        }
     }
 
     public void evaluate(IntegerSolution solution) {
         int jobId = 14;
-        double latency;
-        double throughput;
+
+        int numberOfVariables = getNumberOfVariables();
+        double[] x = new double[numberOfVariables] ;
+
+
+
 
         // since we only take continous chunk, we construct a mapping from a enumerated set to a continous chunk
         int[] batchIntervals = {1, 2, 5, 10};
@@ -107,41 +138,47 @@ public class Ecole extends AbstractIntegerProblem {
         int[] memoryFractionValues = {40, 60, 80};
         int[] executorMemoryValues = {512, 1024, 6144};
 
-/*      
-        // construct a concrete configuration to retrive the prediction (latency or throughput)
-        String key = jobId+"_" + batchIntervals[solution.getVariableValue(0)] + "_" + solution.getVariableValue(1)*100 + "_" + solution.getVariableValue(2)*18 + "_" + solution.getVariableValue(3)*10000 + "_" + maxSizeInFlightValues[solution.getVariableValue(4)] + "_" + bypassMergeThresholdValues[solution.getVariableValue(5)] + "_" + memoryFractionValues[solution.getVariableValue(6)] + "_" + executorMemoryValues[solution.getVariableValue(7)] + "_" + solution.getVariableValue(8) + "_" + solution.getVariableValue(9);
-        //System.out.println(key);
-        latency = latencyMap.get(key);
-        throughput = throughputMap.get(key);
-        //double cost = 12.5 * batchIntervals[solution.getVariableValue(0)] + 48 * solution.getVariableValue(2)*18;
-        solution.setObjective(0, latency);
-        solution.setObjective(1, -throughput);
-        //solution.setObjective(2, cost);
-*/        
-        
-        StringBuilder configL = new StringBuilder("JobID" + ":" + jobId + ";" + "Objective:Latency;" + "batchInterval:" + batchIntervals[solution.getVariableValue(0)] + ";blockInterval:" + solution.getVariableValue(1)*100 + ";parallelism:" + solution.getVariableValue(2)*18 + ";inputRate:" + solution.getVariableValue(3)*10000 + ";maxSizeInFlightValues:" + maxSizeInFlightValues[solution.getVariableValue(4)] + ";bypassMergeThresholdValues:" + bypassMergeThresholdValues[solution.getVariableValue(5)] + ";memoryFractionValues:" + memoryFractionValues[solution.getVariableValue(6)] + ";executorMemoryValues:" + executorMemoryValues[solution.getVariableValue(7)] + ";rddCompressValues:" + solution.getVariableValue(8) + ";broadcastCompressValues:" + solution.getVariableValue(9));
-        StringBuilder configT = new StringBuilder("JobID" + ":" + jobId + ";" + "Objective:Throughput;" + "batchInterval:" + batchIntervals[solution.getVariableValue(0)] + ";blockInterval:" + solution.getVariableValue(1)*100 + ";parallelism:" + solution.getVariableValue(2)*18 + ";inputRate:" + solution.getVariableValue(3)*10000 + ";maxSizeInFlightValues:" + maxSizeInFlightValues[solution.getVariableValue(4)] + ";bypassMergeThresholdValues:" + bypassMergeThresholdValues[solution.getVariableValue(5)] + ";memoryFractionValues:" + memoryFractionValues[solution.getVariableValue(6)] + ";executorMemoryValues:" + executorMemoryValues[solution.getVariableValue(7)] + ";rddCompressValues:" + solution.getVariableValue(8) + ";broadcastCompressValues:" + solution.getVariableValue(9));
 
+        Boolean rerunFlag = true;
 
-        
-        String configLatency = configL.toString();
-        String configThruput = configT.toString();
+        while(rerunFlag == true) {
 
-        
-        zClient.putMessage("JConfig", configLatency);
-        String predictAnswer = zClient.getMessage();
-        String predictAnsTopic = zClient.parseTopic(predictAnswer); // it should be PyPred
-        String predictAnsMessage = zClient.parseMessage(predictAnswer);
-        double targetLatency = Double.parseDouble(predictAnsMessage);
-        solution.setObjective(0, targetLatency);
-        
-        zClient.putMessage("JConfig", configThruput);
-        predictAnswer = zClient.getMessage();
-        predictAnsTopic = zClient.parseTopic(predictAnswer); // it should be PyPred
-        predictAnsMessage = zClient.parseMessage(predictAnswer);
-        double targetThruput = Double.parseDouble(predictAnsMessage);
-        solution.setObjective(1, -targetThruput);
-        
+            for (int i = 0; i < numberOfVariables; i++) {
+                x[i] = solution.getVariableValue(i) ;
+            }
+            x[4] = maxSizeInFlightValues[(int)x[4]];
+            x[5] = bypassMergeThresholdValues[(int)x[5]];
+            x[6] = memoryFractionValues[(int)x[6]];
+            x[7] = executorMemoryValues[(int)x[7]];
+
+            StringBuilder configL = new StringBuilder("JobID" + ":" + jobId + ";" + "Objective:Latency;" + "batchInterval:" + x[0] + ";blockInterval:" + x[1] + ";parallelism:" + x[2] + ";inputRate:" + x[3] + ";maxSizeInFlightValues:" + x[4] + ";bypassMergeThresholdValues:" + x[5] + ";memoryFractionValues:" + x[6] + ";executorMemoryValues:" + x[7] + ";rddCompressValues:" + x[8] + ";broadcastCompressValues:" + x[9]);
+            StringBuilder configT = new StringBuilder("JobID" + ":" + jobId + ";" + "Objective:Throughput;" + "batchInterval:" + x[0] + ";blockInterval:" + x[1] + ";parallelism:" + x[2] + ";inputRate:" + x[3] + ";maxSizeInFlightValues:" + x[4] + ";bypassMergeThresholdValues:" + x[5] + ";memoryFractionValues:" + x[6] + ";executorMemoryValues:" + x[7] + ";rddCompressValues:" + x[8] + ";broadcastCompressValues:" + x[9]);
+
+            String configLatency = configL.toString();
+            String configThruput = configT.toString();
+
+            zClient.putMessage("JConfig", configLatency);
+            String predictAnswer = zClient.getMessage();
+            String predictAnsTopic = zClient.parseTopic(predictAnswer); // it should be PyPred
+            String predictAnsMessage = zClient.parseMessage(predictAnswer);
+            double targetLatency = Double.parseDouble(predictAnsMessage);
+
+            if (constraintBatchIntervalAndWindowSize(jobId, x[0] * 1.0) != 0)
+                continue;
+
+            if (constraintSlideWindowAndLatency(jobId, x[0], targetLatency))
+                continue;
+
+            rerunFlag = false;
+            zClient.putMessage("JConfig", configThruput);
+            predictAnswer = zClient.getMessage();
+            predictAnsTopic = zClient.parseTopic(predictAnswer); // it should be PyPred
+            predictAnsMessage = zClient.parseMessage(predictAnswer);
+            double targetThruput = Double.parseDouble(predictAnsMessage);
+
+            solution.setObjective(0, targetLatency);
+            solution.setObjective(1, -targetThruput);
+        }
             
     }
 }
