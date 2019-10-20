@@ -3,30 +3,21 @@ package org.uma.jmetal.problem.multiobjective.ecole;
 import org.uma.jmetal.problem.impl.AbstractIntegerProblem;
 import org.uma.jmetal.solution.IntegerSolution;
 import org.uma.jmetal.util.JMetalException;
-
+import org.uma.jmetal.util.SocClient;
 import org.uma.jmetal.util.solutionattribute.impl.NumberOfViolatedConstraints;
 import org.uma.jmetal.util.solutionattribute.impl.OverallConstraintViolation;
 
-import org.uma.jmetal.util.SocClient;
-import org.uma.jmetal.util.ZMQClient;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-public class Ecole extends AbstractIntegerProblem {
+public class S14 extends AbstractIntegerProblem {
 
     public OverallConstraintViolation<IntegerSolution> overallConstraintViolationDegree ;
     public NumberOfViolatedConstraints<IntegerSolution> numberOfViolatedConstraints ;
 
     SocClient socClient;
 
-    public Ecole() {
+    public S14() {
         // 10 knobs, 3 objectives
         //this(10, 3);
         this(10, 2);
@@ -63,12 +54,12 @@ public class Ecole extends AbstractIntegerProblem {
 
         overallConstraintViolationDegree = new OverallConstraintViolation<IntegerSolution>() ;
         numberOfViolatedConstraints = new NumberOfViolatedConstraints<IntegerSolution>() ;
-        
+
         //TODO parameterize the arguments later
         socClient = new SocClient("EAClient", "localhost", 5558);
     }
 
-    public Ecole(int numberOfVariables, int numberOfObjectives) throws JMetalException {
+    public S14(int numberOfVariables, int numberOfObjectives) throws JMetalException {
         setNumberOfVariables(numberOfVariables);
         setNumberOfObjectives(numberOfObjectives);
         setNumberOfConstraints(2);
