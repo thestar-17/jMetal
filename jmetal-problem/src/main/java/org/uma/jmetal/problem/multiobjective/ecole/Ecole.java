@@ -4,6 +4,10 @@ import org.uma.jmetal.problem.impl.AbstractIntegerProblem;
 import org.uma.jmetal.solution.IntegerSolution;
 import org.uma.jmetal.util.JMetalException;
 
+import org.uma.jmetal.util.solutionattribute.impl.NumberOfViolatedConstraints;
+import org.uma.jmetal.util.solutionattribute.impl.OverallConstraintViolation;
+
+import org.uma.jmetal.util.SocClient;
 import org.uma.jmetal.util.ZMQClient;
 
 import java.io.File;
@@ -16,8 +20,11 @@ import java.util.List;
 import java.util.Map;
 
 public class Ecole extends AbstractIntegerProblem {
-	
-	ZMQClient zClient;
+
+    public OverallConstraintViolation<IntegerSolution> overallConstraintViolationDegree ;
+    public NumberOfViolatedConstraints<IntegerSolution> numberOfViolatedConstraints ;
+
+    SocClient socClient;
 
     public Ecole() {
         // 10 knobs, 3 objectives
@@ -40,28 +47,31 @@ public class Ecole extends AbstractIntegerProblem {
         upperLimit.add(90);
         upperLimit.add(1200000);
 
-        for (int i = 4; i <= 7; i++) {
-            lowerLimit.add(0);
-            upperLimit.add(2);
-        }
-
         for (int i = 8; i <= 9; i++) {
             lowerLimit.add(0);
             upperLimit.add(1);
+        }
+
+        for (int i = 4; i <= 7; i++) {
+            lowerLimit.add(0);
+            upperLimit.add(2);
         }
 
 
         setLowerLimit(lowerLimit);
         setUpperLimit(upperLimit);
 
+        overallConstraintViolationDegree = new OverallConstraintViolation<IntegerSolution>() ;
+        numberOfViolatedConstraints = new NumberOfViolatedConstraints<IntegerSolution>() ;
         
         //TODO parameterize the arguments later
-        zClient = new ZMQClient("EAClient", "localhost", 5550);
+        socClient = new SocClient("EAClient", "localhost", 5558);
     }
 
     public Ecole(int numberOfVariables, int numberOfObjectives) throws JMetalException {
         setNumberOfVariables(numberOfVariables);
         setNumberOfObjectives(numberOfObjectives);
+        setNumberOfConstraints(2);
         setName("Ecole");
     }
 
@@ -128,57 +138,116 @@ public class Ecole extends AbstractIntegerProblem {
         int numberOfVariables = getNumberOfVariables();
         double[] x = new double[numberOfVariables] ;
 
-
-
-
         // since we only take continous chunk, we construct a mapping from a enumerated set to a continous chunk
         int[] batchIntervals = {1, 2, 5, 10};
         int[] maxSizeInFlightValues = {24, 48, 96};
         int[] bypassMergeThresholdValues = {10, 18, 200};
-        int[] memoryFractionValues = {40, 60, 80};
+        double[] memoryFractionValues = {0.4, 0.6, 0.8};
         int[] executorMemoryValues = {512, 1024, 6144};
 
+        for (int i = 0; i < numberOfVariables; i++) {
+            x[i] = solution.getVariableValue(i) ;
+        }
+        x[6] = maxSizeInFlightValues[(int)x[6]];
+        x[7] = bypassMergeThresholdValues[(int)x[7]];
+        x[8] = memoryFractionValues[(int)x[8]];
+        x[9] = executorMemoryValues[(int)x[9]];
 
-        Boolean rerunFlag = true;
+        StringBuilder configL = new StringBuilder("JobID" + ":" + jobId + ";" + "Objective:latency;" + "batchInterval:" + x[0] + ";blockInterval:" + x[1] + ";parallelism:" + x[2] + ";inputRate:" + x[3] + ";broadcastCompressValues:" + x[4] + ";rddCompressValues:" + x[5] + ";maxSizeInFlightValues:" + x[6] + ";bypassMergeThresholdValues:" + x[7] + ";memoryFractionValues:" + x[8] + ";executorMemoryValues:" + x[9]);
+        StringBuilder configT = new StringBuilder("JobID" + ":" + jobId + ";" + "Objective:throughput;" + "batchInterval:" + x[0] + ";blockInterval:" + x[1] + ";parallelism:" + x[2] + ";inputRate:" + x[3] + ";broadcastCompressValues:" + x[4] + ";rddCompressValues:" + x[5] + ";maxSizeInFlightValues:" + x[6] + ";bypassMergeThresholdValues:" + x[7] + ";memoryFractionValues:" + x[8] + ";executorMemoryValues:" + x[9]);
 
-        while(rerunFlag == true) {
+        String configLatency = configL.toString();
+        String configThruput = configT.toString();
+
+        socClient.putMessage("JConfig", configLatency);
+        String predictAnswer = socClient.getMessage();
+        String predictAnsTopic = socClient.parseTopic(predictAnswer); // it should be PyPred
+        String predictAnsMessage = socClient.parseMessage(predictAnswer);
+        double targetLatency = Double.parseDouble(predictAnsMessage);
+        solution.setObjective(0, targetLatency);
+
+        socClient.putMessage("JConfig", configThruput);
+        predictAnswer = socClient.getMessage();
+        predictAnsTopic = socClient.parseTopic(predictAnswer); // it should be PyPred
+        predictAnsMessage = socClient.parseMessage(predictAnswer);
+        double targetThruput = Double.parseDouble(predictAnsMessage);
+        solution.setObjective(1, -targetThruput);
+
+        this.evaluateConstraints(solution);
+
+
+/*        Boolean rerunFlag = true;
+            while(rerunFlag == true) {
 
             for (int i = 0; i < numberOfVariables; i++) {
                 x[i] = solution.getVariableValue(i) ;
             }
-            x[4] = maxSizeInFlightValues[(int)x[4]];
-            x[5] = bypassMergeThresholdValues[(int)x[5]];
-            x[6] = memoryFractionValues[(int)x[6]];
-            x[7] = executorMemoryValues[(int)x[7]];
+            x[6] = maxSizeInFlightValues[(int)x[6]];
+            x[7] = bypassMergeThresholdValues[(int)x[7]];
+            x[8] = memoryFractionValues[(int)x[8]];
+            x[9] = executorMemoryValues[(int)x[9]];
 
-            StringBuilder configL = new StringBuilder("JobID" + ":" + jobId + ";" + "Objective:Latency;" + "batchInterval:" + x[0] + ";blockInterval:" + x[1] + ";parallelism:" + x[2] + ";inputRate:" + x[3] + ";maxSizeInFlightValues:" + x[4] + ";bypassMergeThresholdValues:" + x[5] + ";memoryFractionValues:" + x[6] + ";executorMemoryValues:" + x[7] + ";rddCompressValues:" + x[8] + ";broadcastCompressValues:" + x[9]);
-            StringBuilder configT = new StringBuilder("JobID" + ":" + jobId + ";" + "Objective:Throughput;" + "batchInterval:" + x[0] + ";blockInterval:" + x[1] + ";parallelism:" + x[2] + ";inputRate:" + x[3] + ";maxSizeInFlightValues:" + x[4] + ";bypassMergeThresholdValues:" + x[5] + ";memoryFractionValues:" + x[6] + ";executorMemoryValues:" + x[7] + ";rddCompressValues:" + x[8] + ";broadcastCompressValues:" + x[9]);
+            StringBuilder configL = new StringBuilder("JobID" + ":" + jobId + ";" + "Objective:latency;" + "batchInterval:" + x[0] + ";blockInterval:" + x[1] + ";parallelism:" + x[2] + ";inputRate:" + x[3] + ";broadcastCompressValues:" + x[4] + ";rddCompressValues:" + x[5] + ";maxSizeInFlightValues:" + x[6] + ";bypassMergeThresholdValues:" + x[7] + ";memoryFractionValues:" + x[8] + ";executorMemoryValues:" + x[9]);
+            StringBuilder configT = new StringBuilder("JobID" + ":" + jobId + ";" + "Objective:throughput;" + "batchInterval:" + x[0] + ";blockInterval:" + x[1] + ";parallelism:" + x[2] + ";inputRate:" + x[3] + ";broadcastCompressValues:" + x[4] + ";rddCompressValues:" + x[5] + ";maxSizeInFlightValues:" + x[6] + ";bypassMergeThresholdValues:" + x[7] + ";memoryFractionValues:" + x[8] + ";executorMemoryValues:" + x[9]);
 
             String configLatency = configL.toString();
             String configThruput = configT.toString();
 
-            zClient.putMessage("JConfig", configLatency);
-            String predictAnswer = zClient.getMessage();
-            String predictAnsTopic = zClient.parseTopic(predictAnswer); // it should be PyPred
-            String predictAnsMessage = zClient.parseMessage(predictAnswer);
+            System.out.println(configLatency);
+
+            socClient.putMessage("JConfig", configLatency);
+            String predictAnswer = socClient.getMessage();
+            String predictAnsTopic = socClient.parseTopic(predictAnswer); // it should be PyPred
+            String predictAnsMessage = socClient.parseMessage(predictAnswer);
             double targetLatency = Double.parseDouble(predictAnsMessage);
 
-            if (constraintBatchIntervalAndWindowSize(jobId, x[0] * 1.0) != 0)
+            if (constraintBatchIntervalAndWindowSize(jobId, x[0] * 1.0) != 0) {
+                System.out.println(configLatency);
                 continue;
-
-            if (constraintSlideWindowAndLatency(jobId, x[0], targetLatency))
+            }
+            if (constraintSlideWindowAndLatency(jobId, x[0], targetLatency)) {
+                System.out.println(configLatency);
                 continue;
+            }
 
             rerunFlag = false;
-            zClient.putMessage("JConfig", configThruput);
-            predictAnswer = zClient.getMessage();
-            predictAnsTopic = zClient.parseTopic(predictAnswer); // it should be PyPred
-            predictAnsMessage = zClient.parseMessage(predictAnswer);
+            socClient.putMessage("JConfig", configThruput);
+            predictAnswer = socClient.getMessage();
+            predictAnsTopic = socClient.parseTopic(predictAnswer); // it should be PyPred
+            predictAnsMessage = socClient.parseMessage(predictAnswer);
             double targetThruput = Double.parseDouble(predictAnsMessage);
 
             solution.setObjective(0, targetLatency);
             solution.setObjective(1, -targetThruput);
+
+            this.evaluateConstraints(solution);
         }
+
+*/
             
+    }
+
+    private void evaluateConstraints(IntegerSolution solution)  {
+
+        int jobId = 14;
+        double[] constraint = new double[this.getNumberOfConstraints()];
+
+        double batchInterval = solution.getVariableValue(0) ;
+        double targetLatency = solution.getObjective(0);
+
+        int violatedConstraints = 0;
+        double overallConstraintViolation = 0.0;
+
+        if (constraintBatchIntervalAndWindowSize(jobId, batchInterval * 1.0) != 0) {
+            violatedConstraints++;
+            overallConstraintViolation = overallConstraintViolation + 100;
+        }
+        if (constraintSlideWindowAndLatency(jobId, batchInterval, targetLatency)) {
+            violatedConstraints++;
+            overallConstraintViolation = overallConstraintViolation + 100;
+        }
+
+        overallConstraintViolationDegree.setAttribute(solution, overallConstraintViolation);
+        numberOfViolatedConstraints.setAttribute(solution, violatedConstraints);
     }
 }
