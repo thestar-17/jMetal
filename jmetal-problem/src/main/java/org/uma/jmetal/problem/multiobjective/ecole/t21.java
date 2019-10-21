@@ -3,33 +3,24 @@ package org.uma.jmetal.problem.multiobjective.ecole;
 import org.uma.jmetal.problem.impl.AbstractIntegerProblem;
 import org.uma.jmetal.solution.IntegerSolution;
 import org.uma.jmetal.util.JMetalException;
-
+import org.uma.jmetal.util.SocClient;
 import org.uma.jmetal.util.solutionattribute.impl.NumberOfViolatedConstraints;
 import org.uma.jmetal.util.solutionattribute.impl.OverallConstraintViolation;
 
-import org.uma.jmetal.util.SocClient;
-import org.uma.jmetal.util.ZMQClient;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-public class Ecole extends AbstractIntegerProblem {
+public class t21 extends AbstractIntegerProblem {
 
     public OverallConstraintViolation<IntegerSolution> overallConstraintViolationDegree ;
     public NumberOfViolatedConstraints<IntegerSolution> numberOfViolatedConstraints ;
 
     SocClient socClient;
 
-    public Ecole() {
+    public t21() {
         // 10 knobs, 3 objectives
         //this(10, 3);
-        this(10, 2);
+        this(10, 3);
 
         // for all knobs, we need to specify the lower and upper bound. It has to be continous integer range
         List<Integer> lowerLimit = new ArrayList<>(getNumberOfVariables()) ;
@@ -63,12 +54,12 @@ public class Ecole extends AbstractIntegerProblem {
 
         overallConstraintViolationDegree = new OverallConstraintViolation<IntegerSolution>() ;
         numberOfViolatedConstraints = new NumberOfViolatedConstraints<IntegerSolution>() ;
-        
+
         //TODO parameterize the arguments later
-        socClient = new SocClient("EAClient", "localhost", 5558);
+        socClient = new SocClient("EAClient", "localhost", 5590);
     }
 
-    public Ecole(int numberOfVariables, int numberOfObjectives) throws JMetalException {
+    public t21(int numberOfVariables, int numberOfObjectives) throws JMetalException {
         setNumberOfVariables(numberOfVariables);
         setNumberOfObjectives(numberOfObjectives);
         setNumberOfConstraints(2);
@@ -133,7 +124,7 @@ public class Ecole extends AbstractIntegerProblem {
     }
 
     public void evaluate(IntegerSolution solution) {
-        int jobId = 14;
+        int jobId = 21;
 
         int numberOfVariables = getNumberOfVariables();
         double[] x = new double[numberOfVariables] ;
@@ -173,63 +164,15 @@ public class Ecole extends AbstractIntegerProblem {
         double targetThruput = Double.parseDouble(predictAnsMessage);
         solution.setObjective(1, -targetThruput);
 
+        solution.setObjective(2, 21.5 * x[0] + 30 * x[2]);
+
         this.evaluateConstraints(solution);
-
-
-/*        Boolean rerunFlag = true;
-            while(rerunFlag == true) {
-
-            for (int i = 0; i < numberOfVariables; i++) {
-                x[i] = solution.getVariableValue(i) ;
-            }
-            x[6] = maxSizeInFlightValues[(int)x[6]];
-            x[7] = bypassMergeThresholdValues[(int)x[7]];
-            x[8] = memoryFractionValues[(int)x[8]];
-            x[9] = executorMemoryValues[(int)x[9]];
-
-            StringBuilder configL = new StringBuilder("JobID" + ":" + jobId + ";" + "Objective:latency;" + "batchInterval:" + x[0] + ";blockInterval:" + x[1] + ";parallelism:" + x[2] + ";inputRate:" + x[3] + ";broadcastCompressValues:" + x[4] + ";rddCompressValues:" + x[5] + ";maxSizeInFlightValues:" + x[6] + ";bypassMergeThresholdValues:" + x[7] + ";memoryFractionValues:" + x[8] + ";executorMemoryValues:" + x[9]);
-            StringBuilder configT = new StringBuilder("JobID" + ":" + jobId + ";" + "Objective:throughput;" + "batchInterval:" + x[0] + ";blockInterval:" + x[1] + ";parallelism:" + x[2] + ";inputRate:" + x[3] + ";broadcastCompressValues:" + x[4] + ";rddCompressValues:" + x[5] + ";maxSizeInFlightValues:" + x[6] + ";bypassMergeThresholdValues:" + x[7] + ";memoryFractionValues:" + x[8] + ";executorMemoryValues:" + x[9]);
-
-            String configLatency = configL.toString();
-            String configThruput = configT.toString();
-
-            System.out.println(configLatency);
-
-            socClient.putMessage("JConfig", configLatency);
-            String predictAnswer = socClient.getMessage();
-            String predictAnsTopic = socClient.parseTopic(predictAnswer); // it should be PyPred
-            String predictAnsMessage = socClient.parseMessage(predictAnswer);
-            double targetLatency = Double.parseDouble(predictAnsMessage);
-
-            if (constraintBatchIntervalAndWindowSize(jobId, x[0] * 1.0) != 0) {
-                System.out.println(configLatency);
-                continue;
-            }
-            if (constraintSlideWindowAndLatency(jobId, x[0], targetLatency)) {
-                System.out.println(configLatency);
-                continue;
-            }
-
-            rerunFlag = false;
-            socClient.putMessage("JConfig", configThruput);
-            predictAnswer = socClient.getMessage();
-            predictAnsTopic = socClient.parseTopic(predictAnswer); // it should be PyPred
-            predictAnsMessage = socClient.parseMessage(predictAnswer);
-            double targetThruput = Double.parseDouble(predictAnsMessage);
-
-            solution.setObjective(0, targetLatency);
-            solution.setObjective(1, -targetThruput);
-
-            this.evaluateConstraints(solution);
-        }
-
-*/
 
     }
 
     private void evaluateConstraints(IntegerSolution solution)  {
 
-        int jobId = 14;
+        int jobId = 21;
         double[] constraint = new double[this.getNumberOfConstraints()];
 
         double batchInterval = solution.getVariableValue(0) ;
@@ -242,7 +185,7 @@ public class Ecole extends AbstractIntegerProblem {
             violatedConstraints++;
             overallConstraintViolation = overallConstraintViolation + 100;
         }
-        if (!constraintSlideWindowAndLatency(jobId, batchInterval, targetLatency)) {
+        if (constraintSlideWindowAndLatency(jobId, batchInterval, targetLatency)) {
             violatedConstraints++;
             overallConstraintViolation = overallConstraintViolation + 100;
         }
